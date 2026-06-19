@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "${id}",
+  "version": "${version}",
+  "name": "${name}",
+  "description": "${description}",
+  "authors": [
+    "${authors}"
+  ],
+  "contact": {
+    "homepage": "${homepage}",
+    "sources": "${sources}",
+    "issues": "${issue}"
+  },
+  "license": "${license}",
+  "icon": "icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.template.mod_id.MainClass"
+    ]
+  },
+  "mixins": [
+    "${mixins}"
+  ],
+
+  "depends": {
+    "minecraft": "${minecraft_dependency}",
+    "java": ">=${java}"
+  }
+}

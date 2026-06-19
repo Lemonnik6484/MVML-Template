@@ -1,0 +1,255 @@
+plugins {
+    id 'java'
+
+    id 'maven-publish'
+
+    // https://github.com/architectury/architectury-loom
+    id 'dev.architectury.loom' version '1.13-SNAPSHOT' apply false
+    id 'dev.architectury.loom-no-remap' version '1.14-SNAPSHOT' apply false
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://www.cursemaven.com'
+    }
+    maven {
+        url = "https://api.modrinth.com/maven"
+    }
+    maven {
+        url 'https://maven.neoforged.net/releases'
+    }
+    maven {
+        url "https://libraries.minecraft.net"
+    }
+    maven {
+        name = "Terraformers"
+        url = "https://maven.terraformersmc.com/"
+    }
+}
+
+def version = sc.current.parsed;
+def loader = sc.current.project.split('-')[0];
+
+if (version >= "26.1") {
+    apply plugin: 'dev.architectury.loom-no-remap'
+} else {
+    apply plugin: 'dev.architectury.loom'
+}
+
+String MOD_ICON_PATH = "assets/${project.mod_id}/icon.png"
+List<String> MIXIN_CONFIG_PATHS = ["${project.mod_id}.mixins.json"]
+
+JavaVersion JAVA_COMPATIBILITY
+
+if (version >= "26.1") { // 26.1
+    JAVA_COMPATIBILITY = JavaVersion.VERSION_25
+} else if (version >= "1.20.5") { // 1.20.5
+    JAVA_COMPATIBILITY = JavaVersion.VERSION_21
+} else if (version >= "1.18") { // 1.18
+    JAVA_COMPATIBILITY = JavaVersion.VERSION_17
+} else if (version >= "1.17") { // 1.17
+    JAVA_COMPATIBILITY = JavaVersion.VERSION_16
+} else {
+    JAVA_COMPATIBILITY = JavaVersion.VERSION_1_8
+}
+
+int javaVersion = JAVA_COMPATIBILITY.ordinal() + 1;
+
+def parchmentVersions = [
+        "1.18.2":  "1.18.2:2022.11.06",
+        "1.19.2":  "1.19.2:2022.11.27",
+        "1.20.1":  "1.20.1:2023.09.03",
+        "1.20.2":  "1.20.2:2023.12.10",
+        "1.20.3":  "1.20.3:2023.12.31",
+        "1.20.5":  "1.20.6:2024.06.16",
+        "1.21.1":  "1.21.1:2024.11.17",
+        "1.21.2":  "1.21.3:2024.12.07",
+        "1.21.9":  "1.21.9:2025.10.05",
+        "1.21.11": "1.21.11:2025.12.20"
+]
+
+group = project.maven_group
+
+String modVersion = "${project.mod_version}+mc${project.minecraft_version}-${project.platform}"
+base {
+    archivesName.set("${project.mod_id}")
+}
+
+stonecutter {
+    constants.match(project.platform, 'fabric', 'quilt', 'forge', 'neoforge', 'paper')
+    swaps["mod_version"] = "\"${project.mod_version}\";".toString()
+
+    swaps["mod_id"] = "\"${project.mod_id}\";".toString()
+}
+
+configurations {
+    modRuntimeOnly.exclude group: 'net.fabricmc', module: 'fabric-loader'
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
+    if (version < "26.1") {
+        mappings loom.layered() {
+            officialMojangMappings()
+            parchment("org.parchmentmc.data:parchment-${parchmentVersions[project.minecraft_version]}@zip")
+        }
+    }
+
+    if (project.platform == 'fabric') {
+        if (version < "26.1") {
+            modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+            modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
+        } else {
+            implementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+            implementation("com.terraformersmc:modmenu:${project.modmenu_version}") {
+                exclude group: "net.fabricmc.fabric-api"
+            }
+        }
+        if (version >= "1.20.5") { // fabric api for modmenu on 1.20.5+
+            if (version >= "26.1") {
+                runtimeOnly "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+            } else {
+                modRuntimeOnly "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+            }
+
+        }
+    }
+    if (project.platform == 'forge') {
+        forge "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+        compileOnly "org.spongepowered:mixin:0.8.5"
+
+        compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.3"))
+        implementation(include("io.github.llamalad7:mixinextras-forge:0.5.3"))
+    }
+    if (project.platform == 'neoforge') {
+        neoForge "net.neoforged:neoforge:${project.neoforge_version}"
+
+        compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.3"))
+        implementation(include("io.github.llamalad7:mixinextras-neoforge:0.5.3"))
+    }
+}
+
+loom {
+    runConfigs.configureEach {
+        ideConfigGenerated = true
+        vmArgs []
+    }
+
+    if (project.platform == 'forge') {
+        forge {
+            mixinConfigs = MIXIN_CONFIG_PATHS
+        }
+    }
+}
+
+processResources {
+    outputs.upToDateWhen { false }
+
+    inputs.property "id", project.mod_id
+    inputs.property "name", project.mod_name
+    inputs.property "version", project.mod_version
+    inputs.property "minecraft_dependency", project.minecraft_dependency
+
+    def good_files = [] as Set
+    def all_files = [] as Set
+    [
+            'fabric':   MIXIN_CONFIG_PATHS + ['fabric.mod.json'],
+            'forge':    MIXIN_CONFIG_PATHS + ['META-INF', 'META-INF/mods.toml', 'pack.mcmeta'],
+            'neoforge': MIXIN_CONFIG_PATHS + ['META-INF', 'META-INF/neoforge.mods.toml', 'pack.mcmeta'],
+    ].forEach { brand, paths ->
+        all_files.addAll(paths)
+        if (brand == project.platform) {
+            good_files.addAll(paths)
+        }
+    }
+    all_files.forEach { it2 ->
+        def path = it2 as String
+        if (good_files.contains(path)) {
+            filesMatching(path) {
+                def valueMap = [
+                        "id": project.mod_id,
+                        "name": project.mod_name,
+                        "version": project.mod_version,
+                        "minecraft_dependency": project.minecraft_dependency,
+
+                        "description": project.mod_description,
+                        "authors": project.mod_authors,
+                        "homepage": project.mod_homepage,
+                        "sources": project.mod_sources,
+                        "issue": project.mod_issue,
+                        "license": project.mod_license,
+                        "java": JAVA_COMPATIBILITY,
+                        "java_compatibility_level": "JAVA_${javaVersion}",
+                        "mixins": "${project.mod_id}.mixins.json"
+                ]
+                expand valueMap
+            }
+        } else {
+            exclude path
+        }
+    }
+
+    if (project.platform in ['forge', 'neoforge']) {
+        // forge requires the mod icon file to be at the resource root
+        filesMatching(MOD_ICON_PATH) { f -> f.path = new File(f.path).getName() }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = javaVersion
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+    if (JAVA_COMPATIBILITY <= JavaVersion.VERSION_1_8) {
+        options.compilerArgs << '-Xlint:-options'
+    }
+}
+
+java {
+    sourceCompatibility = JAVA_COMPATIBILITY
+    targetCompatibility = JAVA_COMPATIBILITY
+
+    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
+
+    withSourcesJar()
+}
+
+stonecutter {
+    java {
+        withSourcesJar()
+        sourceCompatibility = JAVA_COMPATIBILITY
+        targetCompatibility = JAVA_COMPATIBILITY
+    }
+}
+
+jar {
+    from(rootProject.file('LICENSE')) {
+        rename { "${it}_${project.mod_id}" }
+    }
+}
+
+publishing {
+    publications {
+        create("maven${project.name.capitalize()}", MavenPublication) {
+            artifactId = project.mod_id
+
+            from components.java
+        }
+    }
+
+    repositories {
+        def mavenToken = System.getenv("MAVEN_TOKEN") // TODO: set maven token
+
+        if (mavenToken != null && !mavenToken.isEmpty()) {
+            maven {
+                url = uri("changeme") // TODO: set maven url
+
+                credentials {
+                    username = "changeme" // TODO: set maven username
+                    password = mavenToken
+                }
+            }
+        }
+    }
+}

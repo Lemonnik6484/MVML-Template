@@ -1,0 +1,42 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url "https://maven.fabricmc.net/" }
+        maven { url "https://maven.architectury.dev" }
+        maven { url "https://maven.minecraftforge.net" }
+        maven { url "https://maven.neoforged.net/releases/" }
+        maven { url "https://maven.parchmentmc.org" }
+    }
+}
+
+plugins {
+    id "dev.kikugie.stonecutter" version "0.9.6"
+}
+
+stonecutter {
+    centralScript = "build.gradle"
+    kotlinController = false
+
+    shared {
+        def mc = { String version, String... loaders ->
+            for (loader in loaders) {
+                vers("${loader}-${version}", version)
+            }
+        }
+
+        mc("1.18.2", "forge")
+        mc("1.19.2", "fabric", "forge")
+        mc("1.20.1", "fabric", "forge")
+        mc("1.20.3", "neoforge")
+        mc("1.20.5", "fabric", "neoforge")
+        mc("1.21.1", "fabric", "neoforge")
+        mc("1.21.2", "fabric", "neoforge")
+        mc("1.21.9", "fabric", "neoforge")
+        mc("1.21.11", "fabric", "neoforge")
+        mc("26.1.1", "fabric", "neoforge")
+
+        vcsVersion = "fabric-26.1.1"
+    }
+    create(getRootProject())
+}
