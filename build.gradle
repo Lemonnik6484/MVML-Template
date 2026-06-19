@@ -3,9 +3,9 @@ plugins {
 
     id 'maven-publish'
 
-    // https://github.com/architectury/architectury-loom
-    id 'dev.architectury.loom' version '1.13-SNAPSHOT' apply false
-    id 'dev.architectury.loom-no-remap' version '1.14-SNAPSHOT' apply false
+    // https://github.com/RelativityMC/neo-loom
+    id 'org.relativitymc.neo-loom-remap' version '1.16-SNAPSHOT' apply false
+    id 'org.relativitymc.neo-loom' version '1.16-SNAPSHOT' apply false
 }
 
 repositories {
@@ -26,15 +26,18 @@ repositories {
         name = "Terraformers"
         url = "https://maven.terraformersmc.com/"
     }
+    maven {
+        url = 'https://maven.minecraftforge.net'
+    }
 }
 
 def version = sc.current.parsed;
 def loader = sc.current.project.split('-')[0];
 
 if (version >= "26.1") {
-    apply plugin: 'dev.architectury.loom-no-remap'
+    apply plugin: 'org.relativitymc.neo-loom'
 } else {
-    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'org.relativitymc.neo-loom-remap'
 }
 
 String MOD_ICON_PATH = "assets/${project.mod_id}/icon.png"
@@ -71,13 +74,13 @@ def parchmentVersions = [
 
 group = project.maven_group
 
-String modVersion = "${project.mod_version}+mc${project.minecraft_version}-${project.platform}"
+String modVersion = "${project.mod_version}+mc${project.minecraft_version}-${loader}"
 base {
     archivesName.set("${project.mod_id}")
 }
 
 stonecutter {
-    constants.match(project.platform, 'fabric', 'quilt', 'forge', 'neoforge', 'paper')
+    constants.match(loader, 'fabric', 'quilt', 'forge', 'neoforge', 'paper')
     swaps["mod_version"] = "\"${project.mod_version}\";".toString()
 
     swaps["mod_id"] = "\"${project.mod_id}\";".toString()
@@ -97,7 +100,7 @@ dependencies {
         }
     }
 
-    if (project.platform == 'fabric') {
+    if (loader == 'fabric') {
         if (version < "26.1") {
             modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
             modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
@@ -116,15 +119,15 @@ dependencies {
 
         }
     }
-    if (project.platform == 'forge') {
-        forge "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+    if (loader == 'forge') {
+        forgeUserdev "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}:userdev"
         compileOnly "org.spongepowered:mixin:0.8.5"
 
         compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.3"))
         implementation(include("io.github.llamalad7:mixinextras-forge:0.5.3"))
     }
-    if (project.platform == 'neoforge') {
-        neoForge "net.neoforged:neoforge:${project.neoforge_version}"
+    if (loader == 'neoforge') {
+        forgeUserdev "net.neoforged:neoforge:${project.neoforge_version}:userdev"
 
         compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.3"))
         implementation(include("io.github.llamalad7:mixinextras-neoforge:0.5.3"))
@@ -135,12 +138,6 @@ loom {
     runConfigs.configureEach {
         ideConfigGenerated = true
         vmArgs []
-    }
-
-    if (project.platform == 'forge') {
-        forge {
-            mixinConfigs = MIXIN_CONFIG_PATHS
-        }
     }
 }
 
@@ -160,7 +157,7 @@ processResources {
             'neoforge': MIXIN_CONFIG_PATHS + ['META-INF', 'META-INF/neoforge.mods.toml', 'pack.mcmeta'],
     ].forEach { brand, paths ->
         all_files.addAll(paths)
-        if (brand == project.platform) {
+        if (brand == loader) {
             good_files.addAll(paths)
         }
     }
@@ -191,7 +188,7 @@ processResources {
         }
     }
 
-    if (project.platform in ['forge', 'neoforge']) {
+    if (loader in ['forge', 'neoforge']) {
         // forge requires the mod icon file to be at the resource root
         filesMatching(MOD_ICON_PATH) { f -> f.path = new File(f.path).getName() }
     }
@@ -224,6 +221,13 @@ stonecutter {
 }
 
 jar {
+    if (loader == 'forge') {
+        manifest {
+            attributes([
+                    "MixinConfigs": MIXIN_CONFIG_PATHS
+            ])
+        }
+    }
     from(rootProject.file('LICENSE')) {
         rename { "${it}_${project.mod_id}" }
     }
