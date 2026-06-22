@@ -3,7 +3,6 @@ package net.template.mod_id;
 //? if fabric {
 
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +19,7 @@ import net.neoforged.fml.loading.FMLLoader;
 */
 //?}
 //? if >=1.21.11 {
+import net.minecraft.resources.Identifier;
 //?} else {
 /*import net.minecraft.resources.ResourceLocation;
  */
