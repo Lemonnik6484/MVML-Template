@@ -36,10 +36,10 @@ public class MainClass
 		implements ModInitializer
 
 		{
-	public static final String MOD_ID = /*$ mod_id */"fern_config";
+	public static final String MOD_ID = /*$ mod_id */"mod_id";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	public static final String VERSION = /*$ mod_version */"1.3.0";
+	public static final String VERSION = /*$ mod_version */"0.1.0";
 
 	//? if fabric
 	@Override public void onInitialize()
