@@ -41,6 +41,7 @@ before starting the development. Don't worry, it's small!
 - [ ] Rename `mod_id.mixins.json`
 - [ ] Add `icon.png` to `resources` folder
 - [ ] Put `MainClass` into your package and rename it
+- [ ] Change `MainClass` entrypoint in `fabric.mod.json`
 - [ ] Run `Refresh active project` from `Tasks/stonecutter`
 - [ ] Set maven publish settings in the end of `build.gradle` (optional)
 - [ ] Delete `CHANGELOG.md` & `README.md`
