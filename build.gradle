@@ -1,11 +1,15 @@
+import java.util.regex.Pattern
+
 plugins {
     id 'java'
 
     id 'maven-publish'
 
     // https://github.com/architectury/architectury-loom
-    id 'dev.architectury.loom' version '1.13-SNAPSHOT' apply false
-    id 'dev.architectury.loom-no-remap' version '1.14-SNAPSHOT' apply false
+    id 'dev.architectury.loom' version '1.17-SNAPSHOT' apply false
+    id 'dev.architectury.loom-no-remap' version '1.17-SNAPSHOT' apply false
+
+    id "me.modmuss50.mod-publish-plugin" version "2.2.0"
 }
 
 repositories {
@@ -28,27 +32,25 @@ repositories {
     }
 }
 
-def version = sc.current.parsed;
-def loader = sc.current.project.split('-')[0];
+def platformVersion = sc.current.parsed;
 
-if (version >= "26.1") {
+if (platformVersion >= "26.1") {
     apply plugin: 'dev.architectury.loom-no-remap'
 } else {
     apply plugin: 'dev.architectury.loom'
 }
 
-String MOD_ICON_PATH = "assets/${project.mod_id}/icon.png"
 List<String> MIXIN_CONFIG_PATHS = ["${project.mod_id}.mixins.json"]
 
 JavaVersion JAVA_COMPATIBILITY
 
-if (version >= "26.1") { // 26.1
+if (platformVersion >= "26.1") { // 26.1
     JAVA_COMPATIBILITY = JavaVersion.VERSION_25
-} else if (version >= "1.20.5") { // 1.20.5
+} else if (platformVersion >= "1.20.5") { // 1.20.5
     JAVA_COMPATIBILITY = JavaVersion.VERSION_21
-} else if (version >= "1.18") { // 1.18
+} else if (platformVersion >= "1.18") { // 1.18
     JAVA_COMPATIBILITY = JavaVersion.VERSION_17
-} else if (version >= "1.17") { // 1.17
+} else if (platformVersion >= "1.17") { // 1.17
     JAVA_COMPATIBILITY = JavaVersion.VERSION_16
 } else {
     JAVA_COMPATIBILITY = JavaVersion.VERSION_1_8
@@ -69,17 +71,43 @@ def parchmentVersions = [
         "1.21.11": "1.21.11:2025.12.20"
 ]
 
-group = project.maven_group
+def supportedVersions = [
+        "1.18.2":  [ "1.18.2" ],
+        "1.19.2":  [ "1.19.2" ],
+        "1.20.1":  [ "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4" ],
+        "1.20.3":  [ "1.20.3", "1.20.4" ],
+        "1.20.5":  [ "1.20.5", "1.20.6" ],
+        "1.21.1":  [ "1.21", "1.21.1" ],
+        "1.21.2":  [ "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8" ],
+        "1.21.9":  [ "1.21.9", "1.21.10" ],
+        "1.21.11": [ "1.21.11" ],
+        "26.1.1":  [ "26.1", "26.1.1", "26.1.2", "26.2" ],
+]
 
-String modVersion = "${project.mod_version}+mc${project.minecraft_version}-${project.platform}"
+def getChangelog = {
+    def changelog = rootProject.file("CHANGELOG.md").text
+
+    def pattern = ~/(?ms)^${Pattern.quote(project.mod_version)}\R=+\R(.*?)(?=^\S[^\r\n]*\R=+|\z)/
+    def matcher = changelog =~ pattern
+
+    if (!matcher.find()) {
+        println("Couldn't find changelog for version ${project.mod_version}")
+    } else {
+        matcher.group(1).trim()
+    }
+}
+
+group = project.maven_group
+project.version = "${project.mod_version}+mc${project.minecraft_version}-${project.platform}"
+
 base {
-    archivesName.set("${project.mod_id}")
+    archivesName.set(project.mod_id)
 }
 
 stonecutter {
-    constants.match(project.platform, 'fabric', 'quilt', 'forge', 'neoforge', 'paper')
-    swaps["mod_version"] = "\"${project.mod_version}\";".toString()
+    constants.match(project.platform, 'fabric', 'quilt', 'forge', 'neoforge')
 
+    swaps["mod_version"] = "\"${project.mod_version}\";".toString()
     swaps["mod_id"] = "\"${project.mod_id}\";".toString()
 }
 
@@ -90,7 +118,7 @@ configurations {
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
-    if (version < "26.1") {
+    if (platformVersion < "26.1") {
         mappings loom.layered() {
             officialMojangMappings()
             parchment("org.parchmentmc.data:parchment-${parchmentVersions[project.minecraft_version]}@zip")
@@ -98,7 +126,7 @@ dependencies {
     }
 
     if (project.platform == 'fabric') {
-        if (version < "26.1") {
+        if (platformVersion < "26.1") {
             modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
             modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
         } else {
@@ -107,8 +135,8 @@ dependencies {
                 exclude group: "net.fabricmc.fabric-api"
             }
         }
-        if (version >= "1.20.5") { // fabric api for modmenu on 1.20.5+
-            if (version >= "26.1") {
+        if (platformVersion >= "1.20.5") { // fabric api for modmenu on 1.20.5+
+            if (platformVersion >= "26.1") {
                 runtimeOnly "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
             } else {
                 modRuntimeOnly "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
@@ -145,8 +173,6 @@ loom {
 }
 
 processResources {
-    outputs.upToDateWhen { false }
-
     inputs.property "id", project.mod_id
     inputs.property "name", project.mod_name
     inputs.property "version", project.mod_version
@@ -158,6 +184,7 @@ processResources {
             'fabric':   MIXIN_CONFIG_PATHS + ['fabric.mod.json'],
             'forge':    MIXIN_CONFIG_PATHS + ['META-INF', 'META-INF/mods.toml', 'pack.mcmeta'],
             'neoforge': MIXIN_CONFIG_PATHS + ['META-INF', 'META-INF/neoforge.mods.toml', 'pack.mcmeta'],
+            'paper':    ['plugin.yml'],
     ].forEach { brand, paths ->
         all_files.addAll(paths)
         if (brand == project.platform) {
@@ -182,18 +209,12 @@ processResources {
                         "license": project.mod_license,
                         "java": JAVA_COMPATIBILITY,
                         "java_compatibility_level": "JAVA_${javaVersion}",
-                        "mixins": "${project.mod_id}.mixins.json"
                 ]
                 expand valueMap
             }
         } else {
             exclude path
         }
-    }
-
-    if (project.platform in ['forge', 'neoforge']) {
-        // forge requires the mod icon file to be at the resource root
-        filesMatching(MOD_ICON_PATH) { f -> f.path = new File(f.path).getName() }
     }
 }
 
@@ -229,6 +250,34 @@ jar {
     }
 }
 
+publishMods {
+    displayName = project.mod_version
+    version = project.mod_version
+    file = platformVersion >= "26.1"
+            ? tasks.named("jar").flatMap { it.archiveFile }
+            : tasks.named("remapJar").flatMap { it.archiveFile }
+
+    changelog = getChangelog()
+    type = STABLE
+    modLoaders.add(project.platform)
+    if (project.platform == "fabric") modLoaders.add("quilt")
+
+    curseforge {
+        projectId = ""  // TODO: set curseforge project id
+        accessToken = System.getenv("CURSEFORGE_TOKEN") // TODO: set curseforge token
+        minecraftVersions = supportedVersions[project.minecraft_version]
+        server = true
+        changelogType = "markdown"
+    }
+
+    modrinth {
+        projectId = "" // TODO: set modrinth project id
+        accessToken = System.getenv("MODRINTH_TOKEN") // TODO: set modrinth token
+        minecraftVersions = supportedVersions[project.minecraft_version]
+        environment = SERVER_ONLY
+    }
+}
+
 publishing {
     publications {
         create("maven${project.name.capitalize()}", MavenPublication) {
@@ -239,16 +288,12 @@ publishing {
     }
 
     repositories {
-        def mavenToken = System.getenv("MAVEN_TOKEN") // TODO: set maven token
+        maven {
+            url = uri("changeme") // TODO: set maven url
 
-        if (mavenToken != null && !mavenToken.isEmpty()) {
-            maven {
-                url = uri("changeme") // TODO: set maven url
-
-                credentials {
-                    username = "changeme" // TODO: set maven username
-                    password = mavenToken
-                }
+            credentials {
+                username = "changeme" // TODO: set maven username
+                password = System.getenv("MAVEN_TOKEN") // TODO: set maven token
             }
         }
     }

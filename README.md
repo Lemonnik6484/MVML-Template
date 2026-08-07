@@ -17,33 +17,38 @@ Here's a table of versions supported by default:
 
 |  Version   | Fabric/Quilt | Forge | NeoForge |
 |:----------:|:------------:|:-----:|:--------:|
-|    26.2    |      ✅       |   ❌   |    ✅     |
-| 26.1(.1/2) |      ✅       |   ❌   |    ✅     |
-|  1.21.11   |      ✅       |   ❌   |    ✅     |
-| 1.21.9/10  |      ✅       |   ❌   |    ✅     |
-|  1.21.2-8  |      ✅       |   ❌   |    ✅     |
-|  1.21(.1)  |      ✅       |   ❌   |    ✅     |
-|  1.20.5/6  |      ✅       |   ❌   |    ✅     |
-|  1.20.2-4  |      ✅       |   ❌   |    ✅     |
-|  1.20(.1)  |      ✅       |   ✅   |    ❌     |
-|   1.19.2   |      ✅       |   ✅   |    ❌     |
-|   1.18.2   |      ❌       |   ✅   |    ❌     |
+|    26.2    |      ✅      |  ❌   |    ✅    |
+| 26.1(.1/2) |      ✅      |  ❌   |    ✅    |
+|  1.21.11   |      ✅      |  ❌   |    ✅    |
+| 1.21.9/10  |      ✅      |  ❌   |    ✅    |
+|  1.21.2-8  |      ✅      |  ❌   |    ✅    |
+|  1.21(.1)  |      ✅      |  ❌   |    ✅    |
+|  1.20.5/6  |      ✅      |  ❌   |    ✅    |
+|  1.20.2-4  |      ✅      |  ❌   |    ✅    |
+|  1.20(.1)  |      ✅      |  ✅   |    ❌    |
+|   1.19.2   |      ✅      |  ✅   |    ❌    |
+|   1.18.2   |      ❌      |  ✅   |    ❌    |
 
-### copybuilds.sh
+## copybuilds.sh
 There's also a `copybuilds.sh`, a script to easily copy all built JARs into one place, 
 `publish-builds` folder
+
+## Publishing
+Template includes maven, modrinth & curseforge publishing tasks by default,
+check out lines `253`-`300` in `build.gradle` for more info 
 
 ## Checklist
 Here's a checklist of things to do with this template
 before starting the development. Don't worry, it's small!
 
 - [ ] Edit `gradle.properties`
+- [ ] Change mixin entrypoint in `mod_id.mixins.json`
 - [ ] Rename `mod_id.mixins.json`
 - [ ] Add `icon.png` to `resources` folder
 - [ ] Put `MainClass` into your package and rename it
 - [ ] Change `MainClass` entrypoint in `fabric.mod.json`
 - [ ] Run `Refresh active project` from `Tasks/stonecutter`
-- [ ] Set maven publish settings in the end of `build.gradle` (optional)
-- [ ] Delete `CHANGELOG.md` & `README.md`
+- [ ] Set publish settings in the end of `build.gradle` (optional)
+- [ ] Edit `README.md` & `CHANGELOG.md` if needed
 
 Happy development!

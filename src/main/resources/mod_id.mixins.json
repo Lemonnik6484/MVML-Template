@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "dev.lemonnik.fern_config.mixin",
+  "package": "net.template.mod_id.mixin",
   "compatibilityLevel": "${java_compatibility_level}",
   "mixins": [],
   "injectors": {
