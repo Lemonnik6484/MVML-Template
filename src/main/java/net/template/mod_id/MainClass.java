@@ -1,22 +1,25 @@
 package net.template.mod_id;
 
-//? if fabric {
-
-import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//?}
+//? if fabric {
+
+/*import net.fabricmc.api.ModInitializer;
+
+
+*///?}
 //? if forge {
 /*import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLLoader;
 */
 //?}
 //? if neoforge {
-/*import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLLoader;
-*/
+import static net.template.mod_id.MainClass.MOD_ID;
+
 //?}
 //? if >=1.21.11 {
 import net.minecraft.resources.Identifier;
@@ -28,12 +31,12 @@ import net.minecraft.resources.Identifier;
 //import net.minecraft.network.chat.TextComponent;
 
 //? if forge || neoforge
-//@Mod(MOD_ID)
+@Mod(MOD_ID)
 
 @SuppressWarnings("removal")
 public class MainClass
 		//? if fabric
-		implements ModInitializer
+		//implements ModInitializer
 
 		{
 	public static final String MOD_ID = /*$ mod_id */"mod_id";
@@ -42,10 +45,10 @@ public class MainClass
 	public static final String VERSION = /*$ mod_version */"0.1.0";
 
 	//? if fabric
-	@Override public void onInitialize()
+	//@Override public void onInitialize()
 
 	//? if neoforge
-	 //public MainClass(IEventBus modBus)
+	 public MainClass(IEventBus modBus)
 
 	//? if forge
 	//public MainClass()

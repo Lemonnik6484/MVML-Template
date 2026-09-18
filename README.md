@@ -17,6 +17,7 @@ Here's a table of versions supported by default:
 
 |  Version   | Fabric/Quilt | Forge | NeoForge |
 |:----------:|:------------:|:-----:|:--------:|
+|    26.3    |      ✅      |  ❌   |    ✅    |
 |    26.2    |      ✅      |  ❌   |    ✅    |
 | 26.1(.1/2) |      ✅      |  ❌   |    ✅    |
 |  1.21.11   |      ✅      |  ❌   |    ✅    |
