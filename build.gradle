@@ -27,6 +27,9 @@ repositories {
         url "https://libraries.minecraft.net"
     }
     maven {
+        url = "https://maven.lemonnik.dev/releases"
+    }
+    maven {
         name = "Terraformers"
         url = "https://maven.terraformersmc.com/"
     }
@@ -40,7 +43,7 @@ if (platformVersion >= "26.1") {
     apply plugin: 'dev.architectury.loom'
 }
 
-List<String> MIXIN_CONFIG_PATHS = ["${project.mod_id}.mixins.json"]
+List<String> MIXIN_CONFIG_PATHS = ['circuits.mixins.json']
 
 JavaVersion JAVA_COMPATIBILITY
 
@@ -62,7 +65,6 @@ def parchmentVersions = [
         "1.18.2":  "1.18.2:2022.11.06",
         "1.19.2":  "1.19.2:2022.11.27",
         "1.20.1":  "1.20.1:2023.09.03",
-        "1.20.2":  "1.20.2:2023.12.10",
         "1.20.3":  "1.20.3:2023.12.31",
         "1.20.5":  "1.20.6:2024.06.16",
         "1.21.1":  "1.21.1:2024.11.17",
@@ -82,6 +84,7 @@ def supportedVersions = [
         "1.21.9":  [ "1.21.9", "1.21.10" ],
         "1.21.11": [ "1.21.11" ],
         "26.1.1":  [ "26.1", "26.1.1", "26.1.2", "26.2" ],
+        "26.3":    [ "26.3" ]
 ]
 
 def getChangelog = {
@@ -91,10 +94,10 @@ def getChangelog = {
     def matcher = changelog =~ pattern
 
     if (!matcher.find()) {
-        println("Couldn't find changelog for version ${project.mod_version}")
-    } else {
-        matcher.group(1).trim()
+        throw new GradleException("Couldn't find changelog for version ${project.mod_version}")
     }
+
+    matcher.group(1).trim()
 }
 
 group = project.maven_group
@@ -106,7 +109,6 @@ base {
 
 stonecutter {
     constants.match(project.platform, 'fabric', 'quilt', 'forge', 'neoforge')
-
     swaps["mod_version"] = "\"${project.mod_version}\";".toString()
     swaps["mod_id"] = "\"${project.mod_id}\";".toString()
 }
@@ -137,9 +139,9 @@ dependencies {
         }
         if (platformVersion >= "1.20.5") { // fabric api for modmenu on 1.20.5+
             if (platformVersion >= "26.1") {
-                runtimeOnly "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+                implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
             } else {
-                modRuntimeOnly "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+                modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
             }
 
         }
@@ -161,8 +163,9 @@ dependencies {
 
 loom {
     runConfigs.configureEach {
+        // to make sure it generates all "Minecraft Client (:subproject_name)" applications
         ideConfigGenerated = true
-        vmArgs []
+        vmArgs ['']
     }
 
     if (project.platform == 'forge') {
@@ -178,7 +181,7 @@ processResources {
     inputs.property "version", project.mod_version
     inputs.property "minecraft_dependency", project.minecraft_dependency
 
-    def good_files = [] as Set
+    def good_files = [ 'circuits.mixins.json' ] as Set
     def all_files = [] as Set
     [
             'fabric':   MIXIN_CONFIG_PATHS + ['fabric.mod.json'],
@@ -223,6 +226,7 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
     if (JAVA_COMPATIBILITY <= JavaVersion.VERSION_1_8) {
+        // suppressed "source/target value 8 is obsolete and will be removed in a future release"
         options.compilerArgs << '-Xlint:-options'
     }
 }
@@ -263,16 +267,16 @@ publishMods {
     if (project.platform == "fabric") modLoaders.add("quilt")
 
     curseforge {
-        projectId = ""  // TODO: set curseforge project id
-        accessToken = System.getenv("CURSEFORGE_TOKEN") // TODO: set curseforge token
+        projectId = ""
+        accessToken = System.getenv("CURSEFORGE_TOKEN")
         minecraftVersions = supportedVersions[project.minecraft_version]
         server = true
         changelogType = "markdown"
     }
 
     modrinth {
-        projectId = "" // TODO: set modrinth project id
-        accessToken = System.getenv("MODRINTH_TOKEN") // TODO: set modrinth token
+        projectId = ""
+        accessToken = System.getenv("MODRINTH_TOKEN")
         minecraftVersions = supportedVersions[project.minecraft_version]
         environment = SERVER_ONLY
     }
@@ -288,12 +292,16 @@ publishing {
     }
 
     repositories {
-        maven {
-            url = uri("changeme") // TODO: set maven url
+        def mavenToken = System.getenv("MAVEN_TOKEN")
 
-            credentials {
-                username = "changeme" // TODO: set maven username
-                password = System.getenv("MAVEN_TOKEN") // TODO: set maven token
+        if (mavenToken != null && !mavenToken.isEmpty()) {
+            maven {
+                url = uri("https://maven.lemonnik.dev/releases/")
+
+                credentials {
+                    username = "lemonnik"
+                    password = mavenToken
+                }
             }
         }
     }
