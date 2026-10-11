@@ -1,4 +1,4 @@
-package net.template.mod_id;
+package dev.lemonnik.circuits;
 
 //? if fabric {
 
@@ -31,12 +31,12 @@ import net.minecraft.resources.Identifier;
 //@Mod(MOD_ID)
 
 @SuppressWarnings("removal")
-public class MainClass
+public class Circuits
 		//? if fabric
 		implements ModInitializer
 
 		{
-	public static final String MOD_ID = /*$ mod_id */"mod_id";
+	public static final String MOD_ID = /*$ mod_id */"circuits";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static final String VERSION = /*$ mod_version */"0.1.0";
@@ -52,6 +52,8 @@ public class MainClass
 
 	{
 		LOGGER.info("Starting " + MOD_ID);
+
+
 	}
 
 	//? >=1.21.11 {
