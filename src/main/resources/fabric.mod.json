@@ -18,10 +18,13 @@
   "entrypoints": {
     "main": [
       "dev.lemonnik.circuits.Circuits"
+    ],
+    "client": [
+      "dev.lemonnik.circuits.CircuitsClient"
     ]
   },
   "mixins": [
-    "${mixins}"
+    "circuits.mixins.json"
   ],
 
   "depends": {

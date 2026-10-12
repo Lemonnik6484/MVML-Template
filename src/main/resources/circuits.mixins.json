@@ -2,8 +2,11 @@
   "required": true,
   "minVersion": "0.8",
   "package": "dev.lemonnik.circuits.mixin",
-  "compatibilityLevel": "${java_compatibility_level}",
+  "compatibilityLevel": "JAVA_21",
   "mixins": [],
+  "client": [
+    "ConnectionMixin",
+  ],
   "injectors": {
     "defaultRequire": 1
   }

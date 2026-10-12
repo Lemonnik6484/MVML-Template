@@ -52,8 +52,6 @@ public class Circuits
 
 	{
 		LOGGER.info("Starting " + MOD_ID);
-
-
 	}
 
 	//? >=1.21.11 {
