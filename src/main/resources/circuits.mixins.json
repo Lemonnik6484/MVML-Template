@@ -6,6 +6,7 @@
   "mixins": [],
   "client": [
     "ConnectionMixin",
+    "LightEngineMixin"
   ],
   "injectors": {
     "defaultRequire": 1
