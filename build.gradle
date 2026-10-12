@@ -203,7 +203,6 @@ processResources {
                         "name": project.mod_name,
                         "version": project.mod_version,
                         "minecraft_dependency": project.minecraft_dependency,
-
                         "description": project.mod_description,
                         "authors": project.mod_authors,
                         "homepage": project.mod_homepage,
@@ -217,6 +216,15 @@ processResources {
             }
         } else {
             exclude path
+        }
+    }
+
+    if (project.platform == 'fabric' && platformVersion >= "26.1") {
+        doLast {
+            def metadataFile = new File(destinationDir, 'fabric.mod.json')
+            def metadata = new groovy.json.JsonSlurper().parse(metadataFile)
+            metadata.depends.put('fabric-api', '*')
+            metadataFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(metadata))
         }
     }
 }

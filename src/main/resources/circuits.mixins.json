@@ -3,11 +3,10 @@
   "minVersion": "0.8",
   "package": "dev.lemonnik.circuits.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [],
-  "client": [
-    "ConnectionMixin",
+  "mixins": [
     "LightEngineMixin"
   ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   }
